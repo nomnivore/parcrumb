@@ -4,26 +4,44 @@ export type ParserError = {
 };
 
 export function addParserError(
-  state: ParserState<unknown>,
+  state: ParserStateInter<unknown>,
   msg: string,
 ): ParserError[] {
   return [...state.errors, { msg, index: state.index }];
 }
 
+/**
+ * creates a new intermediary parser state with an error message
+ */
 export function withError<T>(
-  state: ParserState<T>,
+  state: ParserStateInter<unknown>,
   msg: string,
-): ParserState<T> {
+): ParserStateInter<T> {
   return {
     ...state,
+    result: undefined,
     isError: true,
     errors: addParserError(state, msg),
   };
 }
 
+/**
+ * creates a new intermediary parser state with a result of type T
+ * if no result is provided, it will be undefined
+ */
+export function withResult<T>(
+  state: ParserStateInter<unknown>,
+  result: T | undefined = undefined,
+): ParserStateInter<T> {
+  return {
+    ...state,
+    result,
+  };
+}
+
 export type ParserPredicate = (char: string) => boolean;
 
-export type ParserState<T> = {
+export type ParserStateInter<T> = {
   target: string;
   index: number;
 
@@ -33,7 +51,21 @@ export type ParserState<T> = {
   errors: ParserError[];
 };
 
-export type StateTransformer<T> = (state: ParserState<T>) => ParserState<T>;
+export type ParserState<T, S extends boolean> = ParserStateInter<T> & {
+  isError: S extends true ? false : true;
+  result: S extends true ? T : undefined;
+};
+
+export type ParserStateResult<T> = ParserState<T, true>;
+export type ParserStateError<T> = ParserState<T, false>;
+
+export type ParserStateResultOrError<T> =
+  | ParserStateResult<T>
+  | ParserStateError<T>;
+
+export type StateTransformer<T> = (
+  state: ParserStateInter<unknown>,
+) => ParserStateInter<T>;
 
 export class Parser<T> {
   public transform: StateTransformer<T>;
@@ -41,15 +73,21 @@ export class Parser<T> {
     this.transform = fn;
   }
 
-  run(target: string) {
-    const initial: ParserState<T> = {
+  run(target: string): ParserStateResultOrError<T> {
+    const initial: ParserStateInter<T> = {
       target,
       index: 0,
       isError: false,
       errors: [],
     };
 
-    return this.transform(initial);
+    const resultState = this.transform(initial);
+
+    if (resultState.isError) {
+      return resultState as ParserStateError<T>;
+    }
+
+    return resultState as ParserStateResult<T>;
   }
 
   map<U>(fn: (result: T) => U): Parser<U> {

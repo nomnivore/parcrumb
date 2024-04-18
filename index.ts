@@ -1,4 +1,4 @@
-import { Parser, withError } from "./parser";
+import { Parser, withError, withResult } from "./parser";
 
 export function isAlphabetic(str: string): boolean {
   if (str.length != 1) return false;
@@ -31,7 +31,7 @@ export const tag = (label: string) =>
   new Parser<string>((state) => {
     const { target, index, isError, errors } = state;
 
-    if (isError) return state; // bubble errors up
+    if (isError) return withResult(state); // bubble errors up
 
     if (!label) {
       return withError(state, `label matcher cannot be empty`);
@@ -62,7 +62,7 @@ export const tag = (label: string) =>
 export const alpha = new Parser<string>((state) => {
   const { target, index, isError, errors } = state;
 
-  if (isError) return state; // bubble errors up
+  if (isError) return withResult(state); // bubble errors up
 
   const char = target.charAt(index);
   if (char == "") return withError(state, "Unexpected end of input");
@@ -86,7 +86,7 @@ export const alpha = new Parser<string>((state) => {
 export const digit = new Parser<string>((state) => {
   const { target, index, isError, errors } = state;
 
-  if (isError) return state; // bubble errors up
+  if (isError) return withResult(state); // bubble errors up
 
   const char = target.charAt(index);
   if (char == "") return withError(state, "Unexpected end of input");
@@ -108,12 +108,12 @@ export const pair = <A, B>(a: Parser<A>, b: Parser<B>) =>
   new Parser<[A, B]>((state) => {
     const { target, index, isError, errors } = state;
 
-    if (isError) return state; // bubble errors up
+    if (isError) return withResult(state); // bubble errors up
 
     // first run parser A
     const aState = a.transform({ target, index, isError, errors });
 
-    if (aState.isError) return { ...aState, result: undefined };
+    if (aState.isError) return withResult(aState);
 
     // then run parser B
 
@@ -124,16 +124,10 @@ export const pair = <A, B>(a: Parser<A>, b: Parser<B>) =>
       errors: aState.errors,
     });
 
-    if (bState.isError) return { ...bState, result: undefined };
+    if (bState.isError) return withResult(bState);
 
     // since neither parser errored, we can assert that results are defined (expected types)
     // HACK: keep an eye on this -- manual type assertion may cause problems in the future
 
-    return {
-      target,
-      result: [aState.result as A, bState.result as B],
-      index: bState.index,
-      isError,
-      errors: bState.errors,
-    };
+    return withResult(bState, [aState.result as A, bState.result as B]);
   });

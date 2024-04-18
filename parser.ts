@@ -21,6 +21,8 @@ export function withError<T>(
   };
 }
 
+export type ParserPredicate = (char: string) => boolean;
+
 export type ParserState<T> = {
   target: string;
   index: number;
@@ -48,5 +50,16 @@ export class Parser<T> {
     };
 
     return this.transform(initial);
+  }
+
+  map<U>(fn: (result: T) => U): Parser<U> {
+    return new Parser((state) => {
+      const nextState = this.transform({ ...state, result: undefined });
+      return {
+        ...nextState,
+        result:
+          nextState.result != undefined ? fn(nextState.result) : undefined,
+      };
+    });
   }
 }

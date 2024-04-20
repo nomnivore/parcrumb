@@ -1,44 +1,11 @@
 import { Parser, createParser, withError, withResult } from "./parser";
+import { isAlphabetic, isDigit } from "./predicates";
 
-export function isAlphabetic(str: string): boolean {
-  if (str.length != 1) return false;
+// basic parsers
 
-  const charCode = str.charCodeAt(0);
-
-  if (
-    !(charCode >= 65 && charCode <= 90) &&
-    !(charCode >= 97 && charCode <= 122)
-  ) {
-    return false;
-  }
-
-  return true;
-}
-
-export function isDigit(str: string): boolean {
-  if (str.length != 1) return false;
-
-  const charCode = str.charCodeAt(0);
-
-  if (!(charCode >= 48 && charCode <= 57)) {
-    return false;
-  }
-
-  return true;
-}
-
-export function isAlphaNumeric(str: string): boolean {
-  return isAlphabetic(str) || isDigit(str);
-}
-
-export function isSpace(str: string): boolean {
-  return str == " " || str == "\t";
-}
-
-export function isNewline(str: string): boolean {
-  return str == "\n";
-}
-
+/**
+ * matches a specific string exactly
+ */
 export const tag = (label: string) =>
   createParser<string>((state) => {
     const { target, index, isError, errors } = state;
@@ -66,6 +33,161 @@ export const tag = (label: string) =>
       isError,
       errors,
     };
+  });
+
+/**
+ * matches a specific string ignoring case
+ */
+export const tagIgnoreCase = (label: string) =>
+  createParser<string>((state) => {
+    const { target, index, isError } = state;
+
+    if (isError) return withResult(state);
+
+    if (!label) {
+      return withError(state, `label matcher cannot be empty`);
+    }
+
+    const len = label.length;
+    const slice = target.slice(index, index + len);
+
+    if (slice.toLowerCase() != label.toLowerCase()) {
+      return withError(
+        state,
+        `Tried to match label '${label}' but got '${slice}' (case-insensitive)`,
+      );
+    }
+
+    return withResult(state, slice, { index: index + len });
+  });
+
+export const char = <C extends string>(char: C) =>
+  createParser<C>((state) => {
+    const { target, index, isError } = state;
+
+    if (isError) return withResult(state);
+
+    if (char.length != 1) {
+      return withError(state, `Expected a single character but got '${char}'`);
+    }
+
+    const charAt = target.charAt(index);
+    if (charAt != char) {
+      return withError(
+        state,
+        `Tried to match character '${char}' but got '${charAt}'`,
+      );
+    }
+
+    return withResult(state, char, { index: index + 1 });
+  });
+
+/**
+ * matches the longest sequence of any of the given characters (in any order, repeating)
+ */
+export const isA = (chars: string) =>
+  createParser<string>((state) => {
+    const { target, index, isError } = state;
+
+    if (isError) return withResult(state);
+
+    let matchLength = 0;
+
+    while (index + matchLength < target.length) {
+      const nextChar = target.charAt(index + matchLength);
+      if (!chars.includes(nextChar)) {
+        break;
+      }
+
+      matchLength++;
+    }
+
+    if (matchLength == 0) {
+      return withError(
+        state,
+        `Tried to match any character in '${chars}' but got '${target.charAt(
+          index,
+        )}'`,
+      );
+    }
+
+    return withResult(state, target.slice(index, index + matchLength), {
+      index: index + matchLength,
+    });
+  });
+
+/**
+ * matches the longest sequence of none of the given characters
+ */
+export const isNot = (chars: string) =>
+  createParser<string>((state) => {
+    const { target, index, isError } = state;
+
+    if (isError) return withResult(state);
+
+    let matchLength = 0;
+
+    while (index + matchLength < target.length) {
+      const nextChar = target.charAt(index + matchLength);
+      if (chars.includes(nextChar)) {
+        break;
+      }
+
+      matchLength++;
+    }
+
+    if (matchLength == 0) {
+      return withError(
+        state,
+        `Tried to match any character not in '${chars}' but got '${target.charAt(
+          index,
+        )}'`,
+      );
+    }
+
+    return withResult(state, target.slice(index, index + matchLength), {
+      index: index + matchLength,
+    });
+  });
+
+/**
+ * matches any single character in the given set
+ */
+export const oneOf = (chars: string) =>
+  createParser<string>((state) => {
+    const { target, index, isError } = state;
+
+    if (isError) return withResult(state);
+
+    const char = target.charAt(index);
+    if (!chars.includes(char)) {
+      return withError(
+        state,
+        `Tried to match one of '${chars}' but got '${char}'`,
+      );
+    }
+
+    return withResult(state, char, { index: index + 1 });
+  });
+
+/**
+ * matches any single character not in the given set
+ */
+export const noneOf = (chars: string) =>
+  createParser<string>((state) => {
+    const { target, index, isError } = state;
+
+    if (isError) return withResult(state);
+
+    const char = target.charAt(index);
+    if (chars.includes(char)) {
+      return withError(
+        state,
+        `Tried to match any character not in '${chars}' but got '${char}'`,
+      );
+    }
+
+    return withResult(state, char, { index: index + 1 });
   });
 
 /**
@@ -104,6 +226,18 @@ export const digit = createParser<string>((state) => {
   return withResult(state, target.charAt(index), { index: index + 1 });
 });
 
+export const rest = createParser<string>((state) => {
+  const { target, index, isError, errors } = state;
+
+  if (isError) return withResult(state); // bubble errors up
+
+  const slice = target.slice(index);
+
+  return withResult(state, slice, { index: index + slice.length });
+});
+
+// combinators
+
 export const tuple = <A extends unknown[]>(
   ...parsers: { [K in keyof A]: Parser<A[K]> }
 ) =>
@@ -132,13 +266,3 @@ export const tuple = <A extends unknown[]>(
   });
 
 export const pair = <A, B>(a: Parser<A>, b: Parser<B>) => tuple(a, b);
-
-export const rest = createParser<string>((state) => {
-  const { target, index, isError, errors } = state;
-
-  if (isError) return withResult(state); // bubble errors up
-
-  const slice = target.slice(index);
-
-  return withResult(state, slice, { index: index + slice.length });
-});

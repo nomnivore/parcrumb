@@ -1,5 +1,17 @@
 import { expect, test, describe } from "bun:test";
-import { alpha, digit, pair, tag, tuple } from "..";
+import {
+  alpha,
+  char,
+  digit,
+  isA,
+  isNot,
+  noneOf,
+  oneOf,
+  pair,
+  tag,
+  tagIgnoreCase,
+  tuple,
+} from "..";
 
 describe("map", () => {
   test("transform the result of a parser", () => {
@@ -26,6 +38,81 @@ describe("tag", () => {
     const state = tag("").run("hello world");
     expect(state.isError).toBeTrue();
     expect(state.result).toBeUndefined();
+  });
+});
+
+describe("tagIgnoreCase", () => {
+  test("match a given label case-insensitively", () => {
+    const parser = tagIgnoreCase("hello");
+
+    expect(parser.run("hello").result).toBe("hello");
+    expect(parser.run("HELLO").result).toBe("HELLO");
+    expect(parser.run("Hello").result).toBe("Hello");
+    expect(parser.run("world").result).toBeUndefined();
+    expect(parser.run("x").result).toBeUndefined();
+  });
+});
+
+describe("char", () => {
+  test("match a given character", () => {
+    const parser = char("x");
+    expect(parser.run("x").result).toBe("x");
+    expect(parser.run("xyz").result).toBe("x");
+    expect(parser.run("X").result).toBeUndefined();
+    expect(parser.run("yz").result).toBeUndefined();
+  });
+});
+
+describe("isA", () => {
+  test("match any of the given characters", () => {
+    const parser = isA("xyz");
+    expect(parser.run("x").result).toBe("x");
+    expect(parser.run("y").result).toBe("y");
+    expect(parser.run("z").result).toBe("z");
+  });
+
+  test("match the longest sequence of any of the given characters", () => {
+    const parser = isA("xyz");
+
+    expect(parser.run("xyz").result).toBe("xyz");
+    expect(parser.run("xy").result).toBe("xy");
+    expect(parser.run("xxyxzax").result).toBe("xxyxz");
+  });
+});
+
+describe("isNot", () => {
+  test("match any character not in the given set", () => {
+    const parser = isNot("abc");
+    expect(parser.run("x").result).toBe("x");
+    expect(parser.run("y").result).toBe("y");
+    expect(parser.run("b").result).toBeUndefined();
+    expect(parser.run("a").result).toBeUndefined();
+  });
+
+  test("match the longest sequence of any character not in the given set", () => {
+    const parser = isNot("abc");
+    expect(parser.run("xyz").result).toBe("xyz");
+    expect(parser.run("xy").result).toBe("xy");
+    expect(parser.run("xxyxzax").result).toBe("xxyxz");
+    expect(parser.run("Hello, world!").result).toBe("Hello, world!");
+  });
+});
+
+describe("oneOf", () => {
+  test("match any character in the given set", () => {
+    const parser = oneOf("xyz");
+    expect(parser.run("x").result).toBe("x");
+    expect(parser.run("y").result).toBe("y");
+    expect(parser.run("1").result).toBeUndefined();
+  });
+});
+
+describe("noneOf", () => {
+  test("match any character not in the given set", () => {
+    const parser = noneOf("xyz");
+    expect(parser.run("a").result).toBe("a");
+    expect(parser.run("b").result).toBe("b");
+    expect(parser.run("x").result).toBeUndefined();
   });
 });
 
@@ -67,8 +154,6 @@ describe("pair", () => {
     const parser = pair(tag("count: "), digit);
 
     const state = parser.run("count: 5");
-
-    console.log(state);
 
     expect(state.result).toBeDefined();
 

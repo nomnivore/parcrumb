@@ -1,4 +1,4 @@
-import { Parser, withError, withResult } from "./parser";
+import { Parser, createParser, withError, withResult } from "./parser";
 
 export function isAlphabetic(str: string): boolean {
   if (str.length != 1) return false;
@@ -27,8 +27,20 @@ export function isDigit(str: string): boolean {
   return true;
 }
 
+export function isAlphaNumeric(str: string): boolean {
+  return isAlphabetic(str) || isDigit(str);
+}
+
+export function isSpace(str: string): boolean {
+  return str == " " || str == "\t";
+}
+
+export function isNewline(str: string): boolean {
+  return str == "\n";
+}
+
 export const tag = (label: string) =>
-  new Parser<string>((state) => {
+  createParser<string>((state) => {
     const { target, index, isError, errors } = state;
 
     if (isError) return withResult(state); // bubble errors up
@@ -59,8 +71,8 @@ export const tag = (label: string) =>
 /**
  * matches any alphabetic character `a-z` and `A-Z`
  */
-export const alpha = new Parser<string>((state) => {
-  const { target, index, isError, errors } = state;
+export const alpha = createParser<string>((state) => {
+  const { target, index, isError } = state;
 
   if (isError) return withResult(state); // bubble errors up
 
@@ -71,20 +83,14 @@ export const alpha = new Parser<string>((state) => {
     return withError(state, `Tried o match a character but got '${char}'`);
   }
 
-  return {
-    target,
-    result: target.charAt(index),
-    index: index + 1,
-    isError,
-    errors,
-  };
+  return withResult(state, target.charAt(index), { index: index + 1 });
 });
 
 /**
  * matches any numeric character `0-9`
  */
-export const digit = new Parser<string>((state) => {
-  const { target, index, isError, errors } = state;
+export const digit = createParser<string>((state) => {
+  const { target, index, isError } = state;
 
   if (isError) return withResult(state); // bubble errors up
 
@@ -95,17 +101,11 @@ export const digit = new Parser<string>((state) => {
     return withError(state, `Tried to match a digit but got '${char}'`);
   }
 
-  return {
-    target,
-    result: target.charAt(index),
-    index: index + 1,
-    isError,
-    errors,
-  };
+  return withResult(state, target.charAt(index), { index: index + 1 });
 });
 
 export const pair = <A, B>(a: Parser<A>, b: Parser<B>) =>
-  new Parser<[A, B]>((state) => {
+  createParser<[A, B]>((state) => {
     const { target, index, isError, errors } = state;
 
     if (isError) return withResult(state); // bubble errors up
@@ -131,3 +131,13 @@ export const pair = <A, B>(a: Parser<A>, b: Parser<B>) =>
 
     return withResult(bState, [aState.result as A, bState.result as B]);
   });
+
+export const rest = createParser<string>((state) => {
+  const { target, index, isError, errors } = state;
+
+  if (isError) return withResult(state); // bubble errors up
+
+  const slice = target.slice(index);
+
+  return withResult(state, slice, { index: index + slice.length });
+});

@@ -32,9 +32,11 @@ export function withError<T>(
 export function withResult<T>(
   state: ParserStateInter<unknown>,
   result: T | undefined = undefined,
+  overrides: Partial<ParserStateInter<T>> = {},
 ): ParserStateInter<T> {
   return {
     ...state,
+    ...overrides,
     result,
   };
 }
@@ -100,4 +102,8 @@ export class Parser<T> {
       };
     });
   }
+}
+
+export function createParser<T>(fn: StateTransformer<T>): Parser<T> {
+  return new Parser(fn);
 }

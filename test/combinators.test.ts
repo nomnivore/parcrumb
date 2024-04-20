@@ -86,3 +86,9 @@ describe("pair", () => {
     expect(state.errors).toHaveLength(1);
   });
 });
+
+describe("rest", () => {
+  test("return the rest of the input", () => {
+    // TODO:
+  });
+});

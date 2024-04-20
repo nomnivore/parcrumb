@@ -104,33 +104,34 @@ export const digit = createParser<string>((state) => {
   return withResult(state, target.charAt(index), { index: index + 1 });
 });
 
-export const pair = <A, B>(a: Parser<A>, b: Parser<B>) =>
-  createParser<[A, B]>((state) => {
-    const { target, index, isError, errors } = state;
+export const tuple = <A extends unknown[]>(
+  ...parsers: { [K in keyof A]: Parser<A[K]> }
+) =>
+  createParser<A>((state) => {
+    const { isError } = state;
 
     if (isError) return withResult(state); // bubble errors up
 
-    // first run parser A
-    const aState = a.transform({ target, index, isError, errors });
+    let prevState = state;
+    let results: A = [] as any;
+    for (const [i, parser] of parsers.entries()) {
+      const nextState = parser.transform({ ...prevState });
 
-    if (aState.isError) return withResult(aState);
+      if (nextState.isError) {
+        return withError(
+          nextState,
+          `Error while parsing sequence (parser #${i + 1})`,
+        );
+      }
 
-    // then run parser B
+      results.push(nextState.result as A);
+      prevState = nextState;
+    }
 
-    const bState = b.transform({
-      target,
-      index: aState.index,
-      isError,
-      errors: aState.errors,
-    });
-
-    if (bState.isError) return withResult(bState);
-
-    // since neither parser errored, we can assert that results are defined (expected types)
-    // HACK: keep an eye on this -- manual type assertion may cause problems in the future
-
-    return withResult(bState, [aState.result as A, bState.result as B]);
+    return withResult(prevState, results);
   });
+
+export const pair = <A, B>(a: Parser<A>, b: Parser<B>) => tuple(a, b);
 
 export const rest = createParser<string>((state) => {
   const { target, index, isError, errors } = state;

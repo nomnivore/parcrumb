@@ -78,6 +78,14 @@ describe("isA", () => {
     expect(parser.run("xy").result).toBe("xy");
     expect(parser.run("xxyxzax").result).toBe("xxyxz");
   });
+
+  test("update the index correctly", () => {
+    const parser = isA("xyz");
+
+    expect(parser.run("xyz").index).toBe(3);
+    expect(parser.run("xy").index).toBe(2);
+    expect(parser.run("xxyxzax").index).toBe(5);
+  });
 });
 
 describe("isNot", () => {

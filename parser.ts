@@ -92,6 +92,21 @@ export class Parser<T> {
     return resultState as ParserStateResult<T>;
   }
 
+  /**
+   * chain two parsers together (monadic bind `>>=`)
+   * @returns a new parser that first runs the current parser and then feeds the resulting state into itself
+   * @template U the type of the new parser's result (must be specified explicitly or the resulting type will be `unknown`)
+   */
+  andThen<U>(
+    fn: (state: ParserStateInter<T>) => ParserStateInter<U>,
+  ): Parser<U> {
+    // TODO: improve type inference so that U doesn't need to be specified
+    return new Parser<U>((state) => {
+      const nextState = this.transform({ ...state, result: undefined });
+      return fn(nextState);
+    });
+  }
+
   map<U>(fn: (result: T) => U): Parser<U> {
     return new Parser((state) => {
       const nextState = this.transform({ ...state, result: undefined });

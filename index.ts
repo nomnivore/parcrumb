@@ -191,9 +191,100 @@ export const noneOf = (chars: string) =>
   });
 
 /**
+ * takes the next `n` characters from the input
+ */
+export const take = (n: number) =>
+  createParser<string>((state) => {
+    const { target, index, isError } = state;
+
+    if (isError) return withResult(state);
+
+    if (n < 1) {
+      return withError(state, `Tried to take ${n} characters (must be > 0)`);
+    }
+
+    const slice = target.slice(index, index + n);
+    if (slice.length < n) {
+      return withError(state, `Unexpected end of input`);
+    }
+
+    return withResult(state, slice, { index: index + n });
+  });
+
+export const takeWhile = (predicate: (char: string) => boolean) =>
+  createParser<string>((state) => {
+    const { target, index, isError } = state;
+
+    if (isError) return withResult(state);
+
+    let matchLength = 0;
+
+    while (index + matchLength < target.length) {
+      const nextChar = target.charAt(index + matchLength);
+      if (!predicate(nextChar)) {
+        break;
+      }
+
+      matchLength++;
+    }
+
+    // an empty sequence is a valid result, and will return ""
+
+    return withResult(state, target.slice(index, index + matchLength), {
+      index: index + matchLength,
+    });
+  });
+
+export const takeWhile1 = (predicate: (char: string) => boolean) =>
+  takeWhile(predicate).andThen<string>((state) => {
+    const { result } = state;
+
+    if (result == undefined || result.length == 0) {
+      return withError(state, `Expected at least one character`);
+    }
+
+    return state;
+  });
+
+export const takeUntil = (predicate: (char: string) => boolean) =>
+  createParser<string>((state) => {
+    const { target, index, isError } = state;
+
+    if (isError) return withResult(state);
+
+    let matchLength = 0;
+
+    while (index + matchLength < target.length) {
+      const nextChar = target.charAt(index + matchLength);
+      if (predicate(nextChar)) {
+        break;
+      }
+
+      matchLength++;
+    }
+
+    // an empty sequence is a valid result, and will return ""
+
+    return withResult(state, target.slice(index, index + matchLength), {
+      index: index + matchLength,
+    });
+  });
+
+export const takeUntil1 = (predicate: (char: string) => boolean) =>
+  takeUntil(predicate).andThen<string>((state) => {
+    const { result } = state;
+
+    if (result == undefined || result.length == 0) {
+      return withError(state, `Expected at least one character`);
+    }
+
+    return state;
+  });
+
+/**
  * matches any alphabetic character `a-z` and `A-Z`
  */
-export const alpha = createParser<string>((state) => {
+export const alpha = createParser((state) => {
   const { target, index, isError } = state;
 
   if (isError) return withResult(state); // bubble errors up

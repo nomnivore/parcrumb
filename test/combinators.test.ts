@@ -10,7 +10,11 @@ import {
   pair,
   tag,
   tagIgnoreCase,
+  take,
+  takeWhile,
+  takeUntil,
   tuple,
+  takeWhile1,
 } from "..";
 
 describe("map", () => {
@@ -121,6 +125,59 @@ describe("noneOf", () => {
     expect(parser.run("a").result).toBe("a");
     expect(parser.run("b").result).toBe("b");
     expect(parser.run("x").result).toBeUndefined();
+  });
+});
+
+describe("take", () => {
+  test("take n characters from the input", () => {
+    const parser = take(3);
+
+    expect(parser.run("123").result).toBe("123");
+    expect(parser.run("123456").result).toBe("123");
+    expect(parser.run("12").result).toBeUndefined();
+    expect(parser.run(" 5d2").result).toBe(" 5d");
+  });
+});
+
+describe("takeWhile", () => {
+  test("take characters while the predicate is true", () => {
+    const parser = takeWhile((char) => char !== " ");
+    expect(parser.run("hello world").result).toBe("hello");
+    expect(parser.run("123").result).toBe("123");
+    expect(parser.run(" 123").result).toBe("");
+  });
+
+  test("consume the entire input if the predicate is always true", () => {
+    const parser = takeWhile(() => true);
+
+    expect(parser.run("hello world").result).toBe("hello world");
+    expect(parser.run("123").result).toBe("123");
+    expect(parser.run("").result).toBe("");
+  });
+});
+
+describe("takeWhile1", () => {
+  test("error if the predicate is false for the first character", () => {
+    const parser = takeWhile1((char) => char === " ");
+    expect(parser.run("hello world").isError).toBeTrue();
+    expect(parser.run("123").isError).toBeTrue();
+    expect(parser.run("").isError).toBeTrue();
+  });
+});
+
+describe("takeUntil", () => {
+  test("take characters until the predicate is true", () => {
+    const parser = takeUntil((char) => char === " ");
+    expect(parser.run("hello world").result).toBe("hello");
+    expect(parser.run("123").result).toBe("123");
+    expect(parser.run(" 123").result).toBe("");
+  });
+
+  test("consume the entire input if the predicate is always false", () => {
+    const parser = takeUntil(() => false);
+    expect(parser.run("hello world").result).toBe("hello world");
+    expect(parser.run("123").result).toBe("123");
+    expect(parser.run("").result).toBe("");
   });
 });
 

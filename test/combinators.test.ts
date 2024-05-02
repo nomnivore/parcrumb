@@ -1,5 +1,6 @@
 import { expect, test, describe } from "bun:test";
-import { digit, pair, tag, tuple } from "..";
+import { expectTypeOf } from "expect-type";
+import { alt, digit, pair, tag, tuple } from "..";
 
 describe("pair", () => {
   test("run both parsers correctly", () => {
@@ -38,5 +39,23 @@ describe("tuple", () => {
     expect(state.result && state.result[0]).toBe("score: ");
     expect(state.result && state.result[1]).toBe(5);
     expect(state.result && state.result[2]).toBe(" points");
+  });
+});
+
+describe("alt", () => {
+  test("run and return the first parser that matches", () => {
+    const parser = alt(tag("foo"), tag("bar"));
+
+    expect(parser.run("foobar").result).toBe("foo");
+    expect(parser.run("barfoo").result).toBe("bar");
+    expect(parser.run("baz").isError).toBeTrue();
+  });
+
+  test("properly extract the type of the result", () => {
+    const parser = alt(tag("count: "), digit.map(parseInt));
+
+    expectTypeOf<ReturnType<typeof parser.run>["result"]>().toEqualTypeOf<
+      string | number | undefined
+    >();
   });
 });

@@ -1,8 +1,10 @@
 import { createParser, Parser, withError, withResult } from "../parser";
 
-export const tuple = <A extends unknown[]>(
-  ...parsers: { [K in keyof A]: Parser<A[K]> }
-) =>
+export type ParserTuple<A extends unknown[]> = {
+  [K in keyof A]: Parser<A[K]>;
+};
+
+export const tuple = <A extends unknown[]>(...parsers: ParserTuple<A>) =>
   createParser<A>((state) => {
     const { isError } = state;
 

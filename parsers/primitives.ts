@@ -282,7 +282,7 @@ export const takeUntil1 = (predicate: (char: string) => boolean) =>
 /**
  * matches any alphabetic character `a-z` and `A-Z`
  */
-export const alpha = createParser((state) => {
+export const alpha = createParser<string>((state) => {
   const { target, index, isError } = state;
 
   if (isError) return withResult(state); // bubble errors up

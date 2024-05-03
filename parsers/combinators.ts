@@ -1,5 +1,6 @@
 import {
   createParser,
+  isParserResult,
   Parser,
   withError,
   withResult,
@@ -114,7 +115,7 @@ export const delimited = <A, B, C>(
   post: Parser<C>,
 ) =>
   tuple(pre, parser, post).andThen<B>((state) => {
-    if (state.isError || state.result == undefined)
+    if (!isParserResult(state))
       return withError(state, "Delimited parser failed");
 
     const res = state.result[1];
@@ -127,7 +128,7 @@ export const delimited = <A, B, C>(
  */
 export const preceded = <A, B>(pre: Parser<A>, parser: Parser<B>) =>
   tuple(pre, parser).andThen<B>((state) => {
-    if (state.isError || state.result == undefined)
+    if (!isParserResult(state))
       return withError(state, "Preceded parser failed");
 
     const res = state.result[1];
@@ -140,7 +141,7 @@ export const preceded = <A, B>(pre: Parser<A>, parser: Parser<B>) =>
  */
 export const terminated = <A, B>(parser: Parser<A>, post: Parser<B>) =>
   tuple(parser, post).andThen<A>((state) => {
-    if (state.isError || state.result == undefined)
+    if (!isParserResult(state))
       return withError(state, "Terminated parser failed");
 
     const res = state.result[0];
@@ -157,7 +158,7 @@ export const separatedPair = <A, B, C>(
   right: Parser<C>,
 ) =>
   tuple(left, separator, right).andThen<[A, C]>((state) => {
-    if (state.isError || state.result == undefined)
+    if (!isParserResult(state))
       return withError(state, "SeparatedPair parser failed");
 
     const lr = state.result[0];

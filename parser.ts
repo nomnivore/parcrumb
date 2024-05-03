@@ -65,6 +65,12 @@ export type ParserStateResultOrError<T> =
   | ParserStateResult<T>
   | ParserStateError<T>;
 
+export function isParserResult<T>(
+  state: ParserStateInter<T>,
+): state is ParserStateResult<T> {
+  return !state.isError;
+}
+
 export type StateTransformer<T> = (
   state: ParserStateInter<unknown>,
 ) => ParserStateInter<T>;

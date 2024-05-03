@@ -1,6 +1,16 @@
 import { expect, test, describe } from "bun:test";
 import { expectTypeOf } from "expect-type";
-import { alt, digit, pair, tag, tuple } from "..";
+import {
+  alt,
+  count,
+  delimited,
+  digit,
+  isNot,
+  pair,
+  permutation,
+  tag,
+  tuple,
+} from "..";
 
 describe("pair", () => {
   test("run both parsers correctly", () => {
@@ -57,5 +67,47 @@ describe("alt", () => {
     expectTypeOf<ReturnType<typeof parser.run>["result"]>().toEqualTypeOf<
       string | number | undefined
     >();
+  });
+});
+
+describe("permutation", () => {
+  test("run all parsers in any order", () => {
+    const parser = permutation(tag("foo"), tag("bar"), tag("baz"));
+
+    expect(parser.run("barbazfoo").result).toEqual(["foo", "bar", "baz"]);
+    expect(parser.run("bazfoobar").result).toEqual(["foo", "bar", "baz"]);
+    expect(parser.run("foobarbaz1").result).toEqual(["foo", "bar", "baz"]);
+    expect(parser.run("bazfoo").isError).toBeTrue();
+  });
+});
+
+describe("delimited", () => {
+  test("return the result of the middle parser if all succeed", () => {
+    const parser = delimited(tag("("), digit, tag(")"));
+
+    expect(parser.run("(5)").result).toBe("5");
+    expect(parser.run("(foo)").isError).toBeTrue();
+    expect(parser.run("5").isError).toBeTrue();
+    expect(parser.run("(5").isError).toBeTrue();
+  });
+
+  test("should work with a variable-length parser", () => {
+    const parser = delimited(tag("["), isNot("]"), tag("]"));
+
+    expect(parser.run("[foo]").result).toBe("foo");
+
+    expect(parser.run("[foo bar]").result).toBe("foo bar");
+  });
+});
+
+// TODO: tests for preceded, terminated, separatedPair
+
+describe("count", () => {
+  test("apply the parser n number of times", () => {
+    const parser = count(digit, 5);
+
+    expect(parser.run("12345").result).toHaveLength(5);
+    expect(parser.run("123456").result).toHaveLength(5);
+    expect(parser.run("111").isError).toBeTrue();
   });
 });

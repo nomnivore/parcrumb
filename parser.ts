@@ -113,6 +113,35 @@ export class Parser<T> {
     });
   }
 
+  /**
+   * runs the current parser and then the provided parser in a sequence, returning an array of both results
+
+   * similar to `tuple(this, parser)`
+   */
+  and<U>(parser: Parser<U>) {
+    return this.andThen<[T, U]>((state) => {
+      if (state.isError) return withResult(state);
+
+      const nextState = parser.transform(state);
+
+      if (nextState.isError) return withResult(nextState);
+
+      return withResult(state, [state.result as T, nextState.result as U]);
+    });
+  }
+
+  or<U>(parser: Parser<U>): Parser<T | U> {
+    return this.andThen<T | U>((state) => {
+      if (isParserResult(state)) return state;
+
+      const nextState = parser.transform(state);
+
+      if (isParserResult(nextState)) return nextState;
+
+      return withError(nextState, "Both parsers in 'or' failed");
+    });
+  }
+
   map<U>(fn: (result: T) => U): Parser<U> {
     return new Parser((state) => {
       const nextState = this.transform({ ...state, result: undefined });
@@ -126,5 +155,5 @@ export class Parser<T> {
 }
 
 export function createParser<T>(fn: StateTransformer<T>): Parser<T> {
-  return new Parser(fn);
+  return new Parser<T>(fn);
 }

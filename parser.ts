@@ -134,7 +134,11 @@ export class Parser<T> {
     return this.andThen<T | U>((state) => {
       if (isParserResult(state)) return state;
 
-      const nextState = parser.transform(state);
+      const nextState = parser.transform({
+        ...state,
+        isError: false,
+        errors: [],
+      });
 
       if (isParserResult(nextState)) return nextState;
 

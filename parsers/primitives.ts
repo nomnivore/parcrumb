@@ -82,6 +82,8 @@ export const char = <C extends string>(char: C) =>
 
 /**
  * matches the longest sequence of any of the given characters (in any order, repeating)
+ * uses String.includes to check for a match
+ * see also: `isNot`
  */
 export const isA = (chars: string) =>
   createParser<string>((state) => {
@@ -116,6 +118,8 @@ export const isA = (chars: string) =>
 
 /**
  * matches the longest sequence of none of the given characters
+ * uses String.includes to check for a match
+ * see also: `isA`
  */
 export const isNot = (chars: string) =>
   createParser<string>((state) => {

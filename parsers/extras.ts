@@ -1,5 +1,6 @@
 // parsers that may use one or more primitives and combinators
 
+import { Parser, createParser, withError, withResult } from "../parser";
 import {
   isAlphaNumeric,
   isAlphabetic,
@@ -8,7 +9,7 @@ import {
   isScientificNotation,
   isSpace,
 } from "../predicates";
-import { alt } from "./combinators";
+import { alt, terminated } from "./combinators";
 import { char, tag, takeWhile, takeWhile1 } from "./primitives";
 
 export const digit0 = takeWhile(isDigit);
@@ -37,3 +38,25 @@ export const binary = takeWhile((c) => c == "0" || c == "1");
 export const float = takeWhile(isScientificNotation).map((res) =>
   parseFloat(res)
 );
+
+export const int = takeWhile(isDigit).map(parseInt);
+
+export const eof = createParser<string>((state) => {
+  const { isError, index, target } = state;
+
+  if (isError) return withResult(state); // bubble errors up
+
+  if (index != target.length) {
+    return withError(state, `eof expected, but got '${target.charAt(index)}'`);
+  }
+
+  return withResult(state, "");
+});
+
+export const restLen = createParser<number>((state) => {
+  const { isError, index, target } = state;
+
+  if (isError) return withResult(state); // bubble errors up
+
+  return withResult(state, target.length - index);
+});

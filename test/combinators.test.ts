@@ -6,6 +6,8 @@ import {
   delimited,
   digit,
   isNot,
+  many,
+  many1,
   pair,
   permutation,
   tag,
@@ -109,5 +111,26 @@ describe("count", () => {
     expect(parser.run("12345").result).toHaveLength(5);
     expect(parser.run("123456").result).toHaveLength(5);
     expect(parser.run("111").isError).toBeTrue();
+  });
+});
+
+describe("many", () => {
+  test("apply the parser zero or more times", () => {
+    const parser = many(digit);
+
+    expect(parser.run("12345").result).toHaveLength(5);
+    expect(parser.run("").result).toHaveLength(0);
+    expect(parser.run("foo").result).toHaveLength(0);
+    expect(parser.run("zero").isError).toBeFalse();
+  });
+});
+
+describe("many1", () => {
+  test("error if the parser fails to match at least once", () => {
+    const parser = many1(digit);
+
+    expect(parser.run("12345").result).toHaveLength(5);
+
+    expect(parser.run("").isError).toBeTrue();
   });
 });

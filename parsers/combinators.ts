@@ -188,3 +188,79 @@ export const count = <T>(parser: Parser<T>, count: number) =>
 
     return withResult(prevState, results);
   });
+
+/**
+ * runs the parser repeatedly until it fails, returning an array of results
+ *
+ * see also: `many1`
+ */
+export const many = <T>(parser: Parser<T>): Parser<T[]> =>
+  createParser<T[]>((state) => {
+    const { isError } = state;
+
+    if (isError) return withResult(state); // bubble errors up
+
+    const results: T[] = [];
+
+    let prevState = state as ParserStateInter<T>;
+    while (!prevState.isError) {
+      const nextState = parser.transform(prevState);
+      if (nextState.isError) break;
+      results.push(nextState.result as T);
+      prevState = nextState;
+    }
+
+    return withResult(prevState, results);
+  });
+
+/**
+ * runs the parser at least once, and then repeatedly until it fails, returning an array of results
+ *
+ * see also: `many`
+ */
+export const many1 = <T>(parser: Parser<T>): Parser<T[]> =>
+  many(parser).andThen((state) => {
+    if (!isParserResult(state)) return withResult(state);
+
+    if (state.result.length === 0)
+      return withError(state, "Many1 parser failed (no results)");
+
+    return state;
+  });
+
+/**
+ * runs the parser `parser` until `until` succeeds, returning an array of results and the result of `until`
+ *
+ * on each iteration, the `until` parser is run. If it succeeds, the `manyUntil` parser will stop and return the results
+ */
+export const manyUntil = <T, U>(parser: Parser<T>, until: Parser<U>) =>
+  createParser<[T[], U]>((state) => {
+    const { isError } = state;
+
+    if (isError) return withResult(state); // bubble errors up
+
+    const results: T[] = [];
+
+    let prevState = state as ParserStateInter<T>;
+    let untilState = state as ParserStateInter<U>;
+    // run until the `until` parser succeeds
+
+    while (true) {
+      untilState = until.transform(prevState);
+      if (isParserResult(untilState)) break;
+
+      prevState = parser.transform(prevState);
+      if (!isParserResult(prevState)) {
+        // parser failed
+
+        return withError(
+          prevState,
+          "ManyUntil parser failed (`parser` failed before `until` parser)",
+        );
+      }
+
+      results.push(prevState.result as T);
+    }
+
+    return withResult(untilState, [results, untilState.result]);
+  });

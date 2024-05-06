@@ -25,7 +25,7 @@ export const tuple = <A extends unknown[]>(...parsers: ParserTuple<A>) =>
       if (nextState.isError) {
         return withError(
           nextState,
-          `Error while parsing sequence (parser #${i + 1})`,
+          `Error while parsing sequence (parser #${i + 1})`
         );
       }
 
@@ -112,7 +112,7 @@ export const permutation = <A extends unknown[]>(...parsers: ParserTuple<A>) =>
 export const delimited = <A, B, C>(
   pre: Parser<A>,
   parser: Parser<B>,
-  post: Parser<C>,
+  post: Parser<C>
 ) =>
   tuple(pre, parser, post).andThen<B>((state) => {
     if (!isParserResult(state))
@@ -155,7 +155,7 @@ export const terminated = <A, B>(parser: Parser<A>, post: Parser<B>) =>
 export const separatedPair = <A, B, C>(
   left: Parser<A>,
   separator: Parser<B>,
-  right: Parser<C>,
+  right: Parser<C>
 ) =>
   tuple(left, separator, right).andThen<[A, C]>((state) => {
     if (!isParserResult(state))
@@ -255,7 +255,7 @@ export const manyUntil = <T, U>(parser: Parser<T>, until: Parser<U>) =>
 
         return withError(
           prevState,
-          "ManyUntil parser failed (`parser` failed before `until` parser)",
+          "ManyUntil parser failed (`parser` failed before `until` parser)"
         );
       }
 
@@ -264,3 +264,91 @@ export const manyUntil = <T, U>(parser: Parser<T>, until: Parser<U>) =>
 
     return withResult(untilState, [results, untilState.result]);
   });
+
+/**
+ * runs the given parser up to `max` times, ensuring it has run at least `min` times (inclusive)
+ */
+export const manyTimes = <T>(parser: Parser<T>, min: number, max: number) =>
+  // TODO: write tests
+  createParser<T[]>((state) => {
+    const { isError } = state;
+    if (isError) return withResult(state); // bubble errors up
+
+    if (min < 0 || max < 0 || max < 0)
+      return withError(
+        state,
+        `Invalid min/max values given for 'manyTimes': ${min}/${max}`
+      );
+
+    const results: T[] = [];
+
+    let prevState = state as ParserStateInter<T>;
+    // run until the `until` parser succeeds
+
+    for (let i = 0; i < max; i++) {
+      const nextState = parser.transform(prevState);
+      if (!isParserResult(nextState)) break;
+
+      prevState = nextState;
+      results.push(prevState.result as T);
+    }
+
+    if (results.length < min)
+      return withError(
+        prevState,
+        `ManyTimes parser ran only ${results.length} times (${min} required)`
+      );
+
+    return withResult(prevState, results);
+  });
+
+export const separatedList = <T>(item: Parser<T>, separator: Parser<unknown>) =>
+  // TODO: write tests
+  createParser<T[]>((state) => {
+    const { isError } = state;
+
+    if (isError) return withResult(state); // bubble errors up
+
+    const results: T[] = [];
+
+    // match once then loop all additional 'separator' separated matches
+
+    let prevState = state;
+    const first = item.transform(prevState);
+
+    if (!first.isError) {
+      results.push(first.result as T);
+      prevState = first;
+    }
+
+    while (!first.isError) {
+      // match a separator first, then another item
+      const sep = separator.transform(prevState);
+      if (!isParserResult(sep)) break;
+
+      const nextItem = item.transform(sep);
+      if (!isParserResult(nextItem)) break;
+
+      results.push(nextItem as T);
+      prevState = nextItem;
+    }
+
+    return withResult(prevState, results);
+  });
+
+export const separatedList1 = <T>(
+  item: Parser<T>,
+  separator: Parser<unknown>
+) =>
+  // TODO: write tests
+  separatedList(item, separator).andThen((state) => {
+    if (!isParserResult(state)) return state;
+
+    if (state.result.length < 1)
+      return withError(state, "separatedList1 did not return any results");
+
+    return state;
+  });
+
+// maybe implement some 'fold' parsers? in the meantime, we can use something like
+// many(...).map(x => x.reduce(...))

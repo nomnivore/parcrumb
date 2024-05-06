@@ -36,3 +36,11 @@ export function isSpace(str: string): boolean {
 export function isNewline(str: string): boolean {
   return str == "\n";
 }
+
+export function isMultispace(str: string): boolean {
+  return isSpace(str) || isNewline(str) || str == "\r";
+}
+
+export function isScientificNotation(str: string): boolean {
+  return isDigit(str) || str == "." || str == "-" || str.toLowerCase() == "e";
+}

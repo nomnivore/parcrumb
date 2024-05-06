@@ -20,7 +20,7 @@ export const tag = (label: string) =>
     if (slice != label) {
       return withError(
         state,
-        `Tried to match label '${label}' but got '${slice}'`,
+        `Tried to match label '${label}' but got '${slice}'`
       );
     }
 
@@ -52,7 +52,7 @@ export const tagIgnoreCase = (label: string) =>
     if (slice.toLowerCase() != label.toLowerCase()) {
       return withError(
         state,
-        `Tried to match label '${label}' but got '${slice}' (case-insensitive)`,
+        `Tried to match label '${label}' but got '${slice}' (case-insensitive)`
       );
     }
 
@@ -73,7 +73,7 @@ export const char = <C extends string>(char: C) =>
     if (charAt != char) {
       return withError(
         state,
-        `Tried to match character '${char}' but got '${charAt}'`,
+        `Tried to match character '${char}' but got '${charAt}'`
       );
     }
 
@@ -104,8 +104,8 @@ export const isA = (chars: string) =>
       return withError(
         state,
         `Tried to match any character in '${chars}' but got '${target.charAt(
-          index,
-        )}'`,
+          index
+        )}'`
       );
     }
 
@@ -138,8 +138,8 @@ export const isNot = (chars: string) =>
       return withError(
         state,
         `Tried to match any character not in '${chars}' but got '${target.charAt(
-          index,
-        )}'`,
+          index
+        )}'`
       );
     }
 
@@ -161,7 +161,7 @@ export const oneOf = (chars: string) =>
     if (!chars.includes(char)) {
       return withError(
         state,
-        `Tried to match one of '${chars}' but got '${char}'`,
+        `Tried to match one of '${chars}' but got '${char}'`
       );
     }
 
@@ -181,7 +181,7 @@ export const noneOf = (chars: string) =>
     if (chars.includes(char)) {
       return withError(
         state,
-        `Tried to match any character not in '${chars}' but got '${char}'`,
+        `Tried to match any character not in '${chars}' but got '${char}'`
       );
     }
 
@@ -280,7 +280,7 @@ export const takeUntil1 = (predicate: (char: string) => boolean) =>
   });
 
 /**
- * matches any alphabetic character `a-z` and `A-Z`
+ * matches a single alphabetic character `a-z` and `A-Z`
  */
 export const alpha = createParser<string>((state) => {
   const { target, index, isError } = state;
@@ -298,7 +298,7 @@ export const alpha = createParser<string>((state) => {
 });
 
 /**
- * matches any numeric character `0-9`
+ * matches a single numeric character `0-9`
  */
 export const digit = createParser<string>((state) => {
   const { target, index, isError } = state;

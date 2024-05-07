@@ -84,7 +84,7 @@ export class Parser<T> {
     this.transform = fn;
   }
 
-  run(target: string): ParserStateResultOrError<T> {
+  parse(target: string): ParserStateResultOrError<T> {
     const initial: ParserStateInter<T> = {
       target,
       index: 0,
@@ -100,6 +100,11 @@ export class Parser<T> {
 
     return resultState as ParserStateResult<T>;
   }
+
+  /**
+   * @alias `this.parse`
+   */
+  run = this.parse;
 
   /**
    * chain two parsers together (monadic bind `>>=`)

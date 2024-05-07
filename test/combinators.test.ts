@@ -18,7 +18,7 @@ describe("pair", () => {
   test("run both parsers correctly", () => {
     const parser = pair(tag("count: "), digit);
 
-    const state = parser.run("count: 5");
+    const state = parser.parse("count: 5");
 
     expect(state.result).toBeDefined();
 
@@ -29,7 +29,7 @@ describe("pair", () => {
   test("bubble errors up when one parser errors", () => {
     const parser = pair(tag("hello"), tag("world"));
 
-    const state = parser.run("fooworld");
+    const state = parser.parse("fooworld");
 
     expect(state.result).toBeUndefined();
     expect(state.isError).toBeTrue();
@@ -45,7 +45,7 @@ describe("tuple", () => {
       tag(" points"),
     );
 
-    const state = parser.run("score: 5 points");
+    const state = parser.parse("score: 5 points");
 
     expect(state.result).toBeDefined();
     expect(state.result && state.result[0]).toBe("score: ");
@@ -58,15 +58,15 @@ describe("alt", () => {
   test("run and return the first parser that matches", () => {
     const parser = alt(tag("foo"), tag("bar"));
 
-    expect(parser.run("foobar").result).toBe("foo");
-    expect(parser.run("barfoo").result).toBe("bar");
-    expect(parser.run("baz").isError).toBeTrue();
+    expect(parser.parse("foobar").result).toBe("foo");
+    expect(parser.parse("barfoo").result).toBe("bar");
+    expect(parser.parse("baz").isError).toBeTrue();
   });
 
   test("properly extract the type of the result", () => {
     const parser = alt(tag("count: "), digit.map(parseInt));
 
-    expectTypeOf<ReturnType<typeof parser.run>["result"]>().toEqualTypeOf<
+    expectTypeOf<ReturnType<typeof parser.parse>["result"]>().toEqualTypeOf<
       string | number | undefined
     >();
   });
@@ -76,10 +76,10 @@ describe("permutation", () => {
   test("run all parsers in any order", () => {
     const parser = permutation(tag("foo"), tag("bar"), tag("baz"));
 
-    expect(parser.run("barbazfoo").result).toEqual(["foo", "bar", "baz"]);
-    expect(parser.run("bazfoobar").result).toEqual(["foo", "bar", "baz"]);
-    expect(parser.run("foobarbaz1").result).toEqual(["foo", "bar", "baz"]);
-    expect(parser.run("bazfoo").isError).toBeTrue();
+    expect(parser.parse("barbazfoo").result).toEqual(["foo", "bar", "baz"]);
+    expect(parser.parse("bazfoobar").result).toEqual(["foo", "bar", "baz"]);
+    expect(parser.parse("foobarbaz1").result).toEqual(["foo", "bar", "baz"]);
+    expect(parser.parse("bazfoo").isError).toBeTrue();
   });
 });
 
@@ -87,18 +87,18 @@ describe("delimited", () => {
   test("return the result of the middle parser if all succeed", () => {
     const parser = delimited(tag("("), digit, tag(")"));
 
-    expect(parser.run("(5)").result).toBe("5");
-    expect(parser.run("(foo)").isError).toBeTrue();
-    expect(parser.run("5").isError).toBeTrue();
-    expect(parser.run("(5").isError).toBeTrue();
+    expect(parser.parse("(5)").result).toBe("5");
+    expect(parser.parse("(foo)").isError).toBeTrue();
+    expect(parser.parse("5").isError).toBeTrue();
+    expect(parser.parse("(5").isError).toBeTrue();
   });
 
   test("should work with a variable-length parser", () => {
     const parser = delimited(tag("["), isNot("]"), tag("]"));
 
-    expect(parser.run("[foo]").result).toBe("foo");
+    expect(parser.parse("[foo]").result).toBe("foo");
 
-    expect(parser.run("[foo bar]").result).toBe("foo bar");
+    expect(parser.parse("[foo bar]").result).toBe("foo bar");
   });
 });
 
@@ -108,9 +108,9 @@ describe("count", () => {
   test("apply the parser n number of times", () => {
     const parser = count(digit, 5);
 
-    expect(parser.run("12345").result).toHaveLength(5);
-    expect(parser.run("123456").result).toHaveLength(5);
-    expect(parser.run("111").isError).toBeTrue();
+    expect(parser.parse("12345").result).toHaveLength(5);
+    expect(parser.parse("123456").result).toHaveLength(5);
+    expect(parser.parse("111").isError).toBeTrue();
   });
 });
 
@@ -118,10 +118,10 @@ describe("many", () => {
   test("apply the parser zero or more times", () => {
     const parser = many(digit);
 
-    expect(parser.run("12345").result).toHaveLength(5);
-    expect(parser.run("").result).toHaveLength(0);
-    expect(parser.run("foo").result).toHaveLength(0);
-    expect(parser.run("zero").isError).toBeFalse();
+    expect(parser.parse("12345").result).toHaveLength(5);
+    expect(parser.parse("").result).toHaveLength(0);
+    expect(parser.parse("foo").result).toHaveLength(0);
+    expect(parser.parse("zero").isError).toBeFalse();
   });
 });
 
@@ -129,8 +129,8 @@ describe("many1", () => {
   test("error if the parser fails to match at least once", () => {
     const parser = many1(digit);
 
-    expect(parser.run("12345").result).toHaveLength(5);
+    expect(parser.parse("12345").result).toHaveLength(5);
 
-    expect(parser.run("").isError).toBeTrue();
+    expect(parser.parse("").isError).toBeTrue();
   });
 });

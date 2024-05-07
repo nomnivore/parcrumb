@@ -25,7 +25,7 @@ export const tuple = <A extends unknown[]>(...parsers: ParserTuple<A>) =>
       if (nextState.isError) {
         return withError(
           nextState,
-          `Error while parsing sequence (parser #${i + 1})`
+          `Error while parsing sequence (parser #${i + 1})`,
         );
       }
 
@@ -45,6 +45,9 @@ type ArrayToUnion<A extends unknown[]> = (
   ? I
   : never;
 
+/**
+ * returns the result of the first parser that succeeds
+ */
 export const alt = <A extends unknown[]>(
   ...parsers: { [K in keyof A]: Parser<A[K]> }
 ) =>
@@ -62,6 +65,12 @@ export const alt = <A extends unknown[]>(
 
     return withError(state, "No parser matched in 'alt'");
   });
+
+/**
+ * returns the result of the first parser that succeeds
+ * @alias alt
+ */
+export const or = alt;
 
 /**
  * succeeds if all parsers succeed, in any order
@@ -112,7 +121,7 @@ export const permutation = <A extends unknown[]>(...parsers: ParserTuple<A>) =>
 export const delimited = <A, B, C>(
   pre: Parser<A>,
   parser: Parser<B>,
-  post: Parser<C>
+  post: Parser<C>,
 ) =>
   tuple(pre, parser, post).andThen<B>((state) => {
     if (!isParserResult(state))
@@ -155,7 +164,7 @@ export const terminated = <A, B>(parser: Parser<A>, post: Parser<B>) =>
 export const separatedPair = <A, B, C>(
   left: Parser<A>,
   separator: Parser<B>,
-  right: Parser<C>
+  right: Parser<C>,
 ) =>
   tuple(left, separator, right).andThen<[A, C]>((state) => {
     if (!isParserResult(state))
@@ -255,7 +264,7 @@ export const manyUntil = <T, U>(parser: Parser<T>, until: Parser<U>) =>
 
         return withError(
           prevState,
-          "ManyUntil parser failed (`parser` failed before `until` parser)"
+          "ManyUntil parser failed (`parser` failed before `until` parser)",
         );
       }
 
@@ -277,7 +286,7 @@ export const manyTimes = <T>(parser: Parser<T>, min: number, max: number) =>
     if (min < 0 || max < 0 || max < 0)
       return withError(
         state,
-        `Invalid min/max values given for 'manyTimes': ${min}/${max}`
+        `Invalid min/max values given for 'manyTimes': ${min}/${max}`,
       );
 
     const results: T[] = [];
@@ -296,7 +305,7 @@ export const manyTimes = <T>(parser: Parser<T>, min: number, max: number) =>
     if (results.length < min)
       return withError(
         prevState,
-        `ManyTimes parser ran only ${results.length} times (${min} required)`
+        `ManyTimes parser ran only ${results.length} times (${min} required)`,
       );
 
     return withResult(prevState, results);
@@ -338,7 +347,7 @@ export const separatedList = <T>(item: Parser<T>, separator: Parser<unknown>) =>
 
 export const separatedList1 = <T>(
   item: Parser<T>,
-  separator: Parser<unknown>
+  separator: Parser<unknown>,
 ) =>
   // TODO: write tests
   separatedList(item, separator).andThen((state) => {

@@ -1,3 +1,6 @@
+import { alt, tuple } from "./parsers/combinators";
+import { andThen, map } from "./parsers/modifiers";
+
 export type ParserError = {
   msg: string;
   index: number;
@@ -106,55 +109,35 @@ export class Parser<T> {
   andThen<U>(
     fn: (state: ParserStateInter<T>) => ParserStateInter<U>,
   ): Parser<U> {
-    // TODO: improve type inference so that U doesn't need to be specified
-    return new Parser<U>((state) => {
-      const nextState = this.transform({ ...state, result: undefined });
-      return fn(nextState);
-    });
+    return andThen(this, fn);
   }
 
   /**
    * runs the current parser and then the provided parser in a sequence, returning an array of both results
 
-   * similar to `tuple(this, parser)`
+   * identical to `tuple(this, parser)`
    */
   and<U>(parser: Parser<U>) {
-    return this.andThen<[T, U]>((state) => {
-      if (state.isError) return withResult(state);
-
-      const nextState = parser.transform(state);
-
-      if (nextState.isError) return withResult(nextState);
-
-      return withResult(state, [state.result as T, nextState.result as U]);
-    });
+    return tuple(this, parser);
   }
 
+  /**
+   * runs the current parser, and if it fails, runs the provided parser
+   * identical to `alt(this, parser)`
+   */
   or<U>(parser: Parser<U>): Parser<T | U> {
-    return this.andThen<T | U>((state) => {
-      if (isParserResult(state)) return state;
-
-      const nextState = parser.transform({
-        ...state,
-        isError: false,
-        errors: [],
-      });
-
-      if (isParserResult(nextState)) return nextState;
-
-      return withError(nextState, "Both parsers in 'or' failed");
-    });
+    return alt(this, parser);
   }
 
+  /**
+   * runs the current parser and then applies the provided function to its result as a new parser
+   * can be used to transform the result of a parser, e.g. `parser.map(x => x + 1)`
+   * @template U the type of the new parser's result
+   *
+   * identical to `map(parser, fn)`
+   */
   map<U>(fn: (result: T) => U): Parser<U> {
-    return new Parser((state) => {
-      const nextState = this.transform({ ...state, result: undefined });
-      return {
-        ...nextState,
-        result:
-          nextState.result != undefined ? fn(nextState.result) : undefined,
-      };
-    });
+    return map(this, fn);
   }
 }
 

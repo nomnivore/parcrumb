@@ -74,12 +74,23 @@ export function isParserResult<T>(
   return !state.isError;
 }
 
-export type StateTransformer<T> = (
-  state: ParserStateInter<unknown>,
+/**
+ * @template T the next parser's result type
+ * @template F the previous parser's result type, if applicable.
+ */
+export type StateTransformer<T, F = unknown> = (
+  state: ParserStateInter<F>,
 ) => ParserStateInter<T>;
 
 export class Parser<T> {
+  /**
+   * used internally by parsers to transform intermediary parser state
+   */
   public transform: StateTransformer<T>;
+
+  /**
+   * use `createParser` to create a new parser
+   */
   constructor(fn: StateTransformer<T>) {
     this.transform = fn;
   }
@@ -108,12 +119,11 @@ export class Parser<T> {
 
   /**
    * chain two parsers together (monadic bind `>>=`)
+   * identical to `andThen(this, fn)`
    * @returns a new parser that first runs the current parser and then feeds the resulting state into itself
-   * @template U the type of the new parser's result (must be specified explicitly or the resulting type will be `unknown`)
+   * @template U the type of the new parser's result
    */
-  andThen<U>(
-    fn: (state: ParserStateInter<T>) => ParserStateInter<U>,
-  ): Parser<U> {
+  andThen<U>(fn: StateTransformer<U, T>): Parser<U> {
     return andThen(this, fn);
   }
 
@@ -146,6 +156,10 @@ export class Parser<T> {
   }
 }
 
+/**
+ * creates a new parser from state transformer `fn`
+ * @template T the type of the parser's result
+ */
 export function createParser<T>(fn: StateTransformer<T>): Parser<T> {
   return new Parser<T>(fn);
 }

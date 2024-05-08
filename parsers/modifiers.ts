@@ -1,4 +1,4 @@
-import type { Parser, ParserStateInter } from "../parser";
+import type { Parser, ParserStateInter, StateTransformer } from "../parser";
 import { createParser, isParserResult, withError, withResult } from "../parser";
 
 /**
@@ -23,11 +23,11 @@ export const map = <T, U>(
 /**
  * chain two parsers together (monadic bind `>>=`)
  * @returns a new parser that first runs the current parser and then feeds the resulting state into itself
- * @template U the type of the new parser's result (must be specified explicitly or the resulting type will be `unknown`)
+ * @template U the type of the new parser's result
  */
 export const andThen = <T, U>(
   parser: Parser<T>,
-  fn: (state: ParserStateInter<T>) => ParserStateInter<U>,
+  fn: StateTransformer<U, T>,
 ): Parser<U> => {
   return createParser<U>((state) => {
     const firstState = parser.transform(state);

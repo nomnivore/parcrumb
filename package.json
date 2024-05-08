@@ -19,10 +19,9 @@
     "url": "https://github.com/nomnivore/parcrumb.git"
   },
   "files": [
-    "dist/*.js",
-    "dist/*.d.ts"
+    "dist/**/*.js",
+    "dist/**/*.d.ts"
   ],
   "author": "nomnivore",
   "license": "MIT"
 }
-

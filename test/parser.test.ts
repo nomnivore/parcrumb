@@ -1,6 +1,6 @@
 import { expect, test, describe } from "bun:test";
-import { alpha, digit } from "..";
-import { withResult } from "../parser";
+import { alpha, digit } from "../src";
+import { withResult } from "../src/parser";
 
 describe("map", () => {
   test("transform the result of a parser", () => {

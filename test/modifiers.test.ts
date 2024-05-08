@@ -1,6 +1,6 @@
 import { expect, test, describe } from "bun:test";
-import { recognize } from "../parsers/modifiers";
-import { float } from "../parsers/extras";
+import { recognize } from "../src/parsers/modifiers";
+import { float } from "../src/parsers/extras";
 
 describe("recognize", () => {
   test("should return the consumed input of the parser", () => {

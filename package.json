@@ -2,11 +2,27 @@
   "name": "parcrumb",
   "module": "index.ts",
   "type": "module",
+  "version": "0.0.1",
+  "scripts": {
+    "build": "bun build ./src/index.ts --outfile=dist/index.js && bun run build:typedefs",
+    "build:typedefs": "tsc --emitDeclarationOnly --project tsconfig.types.json"
+  },
   "devDependencies": {
     "@types/bun": "latest",
     "expect-type": "^0.19.0"
   },
   "peerDependencies": {
     "typescript": "^5.0.0"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nomnivore/parcrumb.git"
+  },
+  "files": [
+    "dist/*.js",
+    "dist/*.d.ts"
+  ],
+  "author": "nomnivore",
+  "license": "MIT"
 }
+

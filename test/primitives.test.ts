@@ -13,7 +13,7 @@ import {
   takeWhile,
   takeUntil,
   takeWhile1,
-} from "..";
+} from "../src";
 
 describe("tag", () => {
   test("match a given label", () => {

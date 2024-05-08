@@ -12,7 +12,7 @@ import {
   permutation,
   tag,
   tuple,
-} from "..";
+} from "../src";
 
 describe("pair", () => {
   test("run both parsers correctly", () => {

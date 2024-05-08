@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
-import { pair } from "../parsers/combinators";
-import { tag } from "../parsers/primitives";
-import { eof } from "../parsers/extras";
+import { pair } from "../src/parsers/combinators";
+import { tag } from "../src/parsers/primitives";
+import { eof } from "../src/parsers/extras";
 
 describe("eof", () => {
   test("match the end of the input", () => {

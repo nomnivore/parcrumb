@@ -1,4 +1,7 @@
 # parcrumb
+![GitHub package.json version](https://img.shields.io/github/package-json/v/nomnivore/parcrumb)
+![NPM Version](https://img.shields.io/npm/v/parcrumb)
+
 
 A parser combinator library for Typescript with an API inspired by [rust-bakery/nom](https://github.com/rust-bakery/nom).
 

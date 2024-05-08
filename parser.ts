@@ -1,5 +1,16 @@
 import { alt, tuple } from "./parsers/combinators";
-import { andThen, map } from "./parsers/modifiers";
+import {
+  allConsuming,
+  andThen,
+  cond,
+  consumed,
+  map,
+  opt,
+  peek,
+  recognize,
+  value,
+  verify,
+} from "./parsers/modifiers";
 
 export type ParserError = {
   msg: string;
@@ -149,6 +160,71 @@ export class Parser<T> {
    */
   or<U>(parser: Parser<U>): Parser<T | U> {
     return alt(this, parser);
+  }
+
+  /**
+   * makes the parser optional, returning `null` if the parser fails
+   * identical to `opt(this)`
+   */
+  opt(): Parser<T | null> {
+    return opt(this);
+  }
+
+  /**
+   * returns the result of the parser only if it has consumed all input
+   * identical to `allConsuming(this)`
+   */
+  allConsuming(): Parser<T> {
+    return allConsuming(this);
+  }
+
+  /**
+   * returns the result of the parser without consuming any input
+   */
+  peek(): Parser<T> {
+    return peek(this);
+  }
+
+  /**
+   * returns the consumed input of the parser
+   * idential to `recognize(this)`
+   */
+  recognize(): Parser<string> {
+    return recognize(this);
+  }
+
+  /**
+   * returns the consumed input and the result of the parser in a tuple
+   * identical to `consumed(this)`
+   * @returns \[consumed as `string`, result as `T`]
+   */
+  consumed(): Parser<[string, T]> {
+    return consumed(this);
+  }
+
+  /**
+   * runs the parser only if the condition is true
+   * identical to `cond(this, condition)`
+   */
+  cond(condition: () => boolean | boolean): Parser<T> {
+    return cond(this, condition);
+  }
+
+  /**
+   * runs the parser and returns a successful result only if the result matches the condition
+   * identical to `verify(this, condition)`
+   * else, returns an error state
+   */
+  verify(condition: (result: T) => boolean): Parser<T> {
+    return verify(this, condition);
+  }
+
+  /**
+   * returns `value` if the parser succeeds
+   * similar to `map(parser, () => value)`
+   */
+  value<U>(val: U): Parser<U> {
+    return value(this, val);
   }
 
   /**

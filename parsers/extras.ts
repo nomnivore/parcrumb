@@ -36,7 +36,7 @@ export const notLineEnding = takeWhile((c) => c != "\r" && c != "\n");
 export const binary = takeWhile((c) => c == "0" || c == "1");
 
 export const float = takeWhile(isScientificNotation).map((res) =>
-  parseFloat(res)
+  parseFloat(res),
 );
 
 export const int = takeWhile(isDigit).map(parseInt);
@@ -60,3 +60,15 @@ export const restLen = createParser<number>((state) => {
 
   return withResult(state, target.length - index);
 });
+
+/**
+ * succeeds with the provided value
+ */
+export const success = <T>(value: T) =>
+  createParser<T>((state) => withResult(state, value));
+
+/**
+ * fails with the optionally provided message
+ */
+export const fail = (msg: string = "[fail parser]") =>
+  createParser<undefined>((state) => withError(state, msg));

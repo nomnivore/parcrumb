@@ -56,13 +56,20 @@ export type ParserStateInter<T> = {
   errors: ParserError[];
 };
 
-export type ParserState<T, S extends boolean> = ParserStateInter<T> & {
-  isError: S extends true ? false : true;
-  result: S extends true ? T : undefined;
+export type ParserStateResult<T> = {
+  target: string;
+  index: number;
+  result: T;
+  isError: false;
+  errors: [];
 };
-
-export type ParserStateResult<T> = ParserState<T, true>;
-export type ParserStateError<T> = ParserState<T, false>;
+export type ParserStateError<T> = {
+  target: string;
+  index: number;
+  result: undefined;
+  isError: true;
+  errors: [];
+};
 
 export type ParserStateResultOrError<T> =
   | ParserStateResult<T>

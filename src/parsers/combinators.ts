@@ -338,7 +338,7 @@ export const separatedList = <T>(item: Parser<T>, separator: Parser<unknown>) =>
       const nextItem = item.transform(sep);
       if (!isParserResult(nextItem)) break;
 
-      results.push(nextItem as T);
+      results.push(nextItem.result as T);
       prevState = nextItem;
     }
 

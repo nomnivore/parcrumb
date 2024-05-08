@@ -1,6 +1,7 @@
 {
   "name": "parcrumb",
   "module": "index.ts",
+  "main": "./dist/index.js",
   "type": "module",
   "version": "0.0.1",
   "scripts": {

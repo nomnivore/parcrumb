@@ -1,13 +1,15 @@
 {
   "name": "parcrumb",
   "module": "index.ts",
-  "main": "./dist/index.js",
+  "main": "index.js",
   "type": "module",
   "version": "0.1.0",
   "scripts": {
     "build": "tsc --project tsconfig.build.json",
     "prebuild": "rm -rf dist",
-    "prepublish": "bun run build"
+    "postbuild": "cp package.json README.md LICENSE dist",
+    "pub": "npm publish ./dist",
+    "prepub": "bun run build"
   },
   "devDependencies": {
     "@types/bun": "latest",
@@ -21,8 +23,8 @@
     "url": "https://github.com/nomnivore/parcrumb.git"
   },
   "files": [
-    "dist/**/*.js",
-    "dist/**/*.d.ts"
+    "**/*.js",
+    "**/*.d.ts"
   ],
   "author": "nomnivore",
   "license": "MIT"

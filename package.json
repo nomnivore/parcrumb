@@ -3,7 +3,7 @@
   "module": "index.ts",
   "main": "index.js",
   "type": "module",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "scripts": {
     "build": "tsc --project tsconfig.build.json",
     "prebuild": "rm -rf dist",

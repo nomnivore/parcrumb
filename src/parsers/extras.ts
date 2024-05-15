@@ -72,3 +72,5 @@ export const success = <T>(value: T) =>
  */
 export const fail = (msg: string = "[fail parser]") =>
   createParser<undefined>((state) => withError(state, msg));
+
+export const lazy = <T>(fn: () => Parser<T>) => fn();

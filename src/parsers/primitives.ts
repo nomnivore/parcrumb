@@ -1,4 +1,4 @@
-import { createParser, withError, withResult } from "../parser.ts";
+import { createParser, withError, withResult } from "../parser";
 import { isAlphabetic, isDigit } from "../predicates";
 
 /**
@@ -20,7 +20,7 @@ export const tag = (label: string) =>
     if (slice != label) {
       return withError(
         state,
-        `Tried to match label '${label}' but got '${slice}'`
+        `Tried to match label '${label}' but got '${slice}'`,
       );
     }
 
@@ -52,7 +52,7 @@ export const tagIgnoreCase = (label: string) =>
     if (slice.toLowerCase() != label.toLowerCase()) {
       return withError(
         state,
-        `Tried to match label '${label}' but got '${slice}' (case-insensitive)`
+        `Tried to match label '${label}' but got '${slice}' (case-insensitive)`,
       );
     }
 
@@ -73,7 +73,7 @@ export const char = <C extends string>(char: C) =>
     if (charAt != char) {
       return withError(
         state,
-        `Tried to match character '${char}' but got '${charAt}'`
+        `Tried to match character '${char}' but got '${charAt}'`,
       );
     }
 
@@ -106,8 +106,8 @@ export const isA = (chars: string) =>
       return withError(
         state,
         `Tried to match any character in '${chars}' but got '${target.charAt(
-          index
-        )}'`
+          index,
+        )}'`,
       );
     }
 
@@ -142,8 +142,8 @@ export const isNot = (chars: string) =>
       return withError(
         state,
         `Tried to match any character not in '${chars}' but got '${target.charAt(
-          index
-        )}'`
+          index,
+        )}'`,
       );
     }
 
@@ -165,7 +165,7 @@ export const oneOf = (chars: string) =>
     if (!chars.includes(char)) {
       return withError(
         state,
-        `Tried to match one of '${chars}' but got '${char}'`
+        `Tried to match one of '${chars}' but got '${char}'`,
       );
     }
 
@@ -185,7 +185,7 @@ export const noneOf = (chars: string) =>
     if (chars.includes(char)) {
       return withError(
         state,
-        `Tried to match any character not in '${chars}' but got '${char}'`
+        `Tried to match any character not in '${chars}' but got '${char}'`,
       );
     }
 

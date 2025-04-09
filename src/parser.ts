@@ -72,14 +72,14 @@ export type ParserStateResult<T> = {
   index: number;
   result: T;
   isError: false;
-  errors: [];
+  errors: ParserError[];
 };
 export type ParserStateError<T> = {
   target: string;
   index: number;
   result: undefined;
   isError: true;
-  errors: [];
+  errors: ParserError[];
 };
 
 export type ParserStateResultOrError<T> =

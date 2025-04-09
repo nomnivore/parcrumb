@@ -176,6 +176,9 @@ export const separatedPair = <A, B, C>(
     return withResult(state, [lr, rr]);
   });
 
+/**
+ * runs the parser `count` times, returning an array of results
+ */
 export const count = <T>(parser: Parser<T>, count: number) =>
   createParser<T[]>((state) => {
     const { isError } = state;

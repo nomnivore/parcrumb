@@ -3,7 +3,14 @@
   "module": "index.ts",
   "main": "index.js",
   "type": "module",
-  "version": "0.1.1",
+  "version": "0.1.2",
+  "exports": {
+    ".": {
+      "import": "./index.js",
+      "require": "./index.js",
+      "default": "./index.js"
+    }
+  },
   "scripts": {
     "build": "tsc --project tsconfig.build.json",
     "prebuild": "rm -rf dist",
